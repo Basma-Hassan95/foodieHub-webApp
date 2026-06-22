@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../UserContext";
+import Modal from "../components/Modal";
 
 const API_URL = "https://foodiehub-backend-production.up.railway.app";
 
@@ -8,15 +9,16 @@ const Profile = () => {
   const { userId, authToken, removeToken } = useContext(UserContext);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [modal, setModal] = useState({ type: "", message: "" });
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!authToken || !userId) {
+    if (!authToken) {
       navigate("/login");
       return;
     }
     fetchProfile();
-  }, [userId]);
+  }, [authToken]);
 
   const fetchProfile = async () => {
     try {
@@ -36,6 +38,10 @@ const Profile = () => {
   };
 
   const handleSignOut = () => {
+    setModal({ type: "confirm", message: "Are you sure you want to sign out?" });
+  };
+
+  const confirmSignOut = () => {
     removeToken();
     navigate("/login");
   };
@@ -53,10 +59,7 @@ const Profile = () => {
       <div className="max-w-md mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">My Profile</h1>
-          <button
-            onClick={handleSignOut}
-            className="text-red-500 font-semibold"
-          >
+          <button onClick={handleSignOut} className="text-red-500 font-semibold">
             Sign Out
           </button>
         </div>
@@ -88,10 +91,7 @@ const Profile = () => {
                 }
               />
               <InfoRow label="Address" value={userData.address || "Not set"} />
-              <InfoRow
-                label="Contact"
-                value={userData.contactNumber || "Not set"}
-              />
+              <InfoRow label="Contact" value={userData.contactNumber || "Not set"} />
             </div>
 
             <Link
@@ -107,6 +107,13 @@ const Profile = () => {
           </>
         )}
       </div>
+
+      <Modal
+        type={modal.type}
+        message={modal.message}
+        onClose={() => setModal({ type: "", message: "" })}
+        onConfirm={confirmSignOut}
+      />
     </div>
   );
 };

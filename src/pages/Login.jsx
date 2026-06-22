@@ -2,12 +2,14 @@ import { useState, useContext, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { UserContext } from "../UserContext";
+import Modal from "../components/Modal";
 
 const API_URL = "https://foodiehub-backend-production.up.railway.app";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [modal, setModal] = useState({ type: "", message: "" });
   const { setUserId, saveToken, authToken } = useContext(UserContext);
   const navigate = useNavigate();
 
@@ -17,7 +19,7 @@ const Login = () => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      alert("Please fill in all fields");
+      setModal({ type: "error", message: "Please fill in all fields." });
       return;
     }
 
@@ -31,7 +33,7 @@ const Login = () => {
       const data = await response.json();
 
       if (data.message === "Invalid email or password") {
-        alert(data.message);
+        setModal({ type: "error", message: "Invalid email or password. Please try again." });
         return;
       }
 
@@ -39,14 +41,21 @@ const Login = () => {
         saveToken(data.token);
         const decoded = jwtDecode(data.token);
         setUserId(decoded.userId);
-        navigate("/home");
+        setModal({ type: "success", message: "Login successful! Welcome back 🎉" });
       } else {
-        alert("Server response missing token.");
+        setModal({ type: "error", message: "Something went wrong. Please try again." });
       }
     } catch (error) {
       console.error("Login error:", error);
-      alert("Something went wrong. Please try again.");
+      setModal({ type: "error", message: "Something went wrong. Please try again." });
     }
+  };
+
+  const handleModalClose = () => {
+    if (modal.type === "success") {
+      navigate("/home");
+    }
+    setModal({ type: "", message: "" });
   };
 
   return (
@@ -93,6 +102,12 @@ const Login = () => {
           </Link>
         </p>
       </div>
+
+      <Modal
+        type={modal.type}
+        message={modal.message}
+        onClose={handleModalClose}
+      />
     </div>
   );
 };

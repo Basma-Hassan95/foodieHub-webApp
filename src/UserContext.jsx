@@ -3,12 +3,14 @@ import { createContext, useState, useEffect } from "react";
 export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-  const [userId, setUserId] = useState("");
+  const [userId, setUserIdState] = useState("");
   const [authToken, setAuthToken] = useState("");
 
   useEffect(() => {
     const savedToken = localStorage.getItem("authToken");
+    const savedUserId = localStorage.getItem("userId");
     if (savedToken) setAuthToken(savedToken);
+    if (savedUserId) setUserIdState(savedUserId);
   }, []);
 
   const saveToken = (token) => {
@@ -16,10 +18,16 @@ export const UserProvider = ({ children }) => {
     setAuthToken(token);
   };
 
+  const setUserId = (id) => {
+    localStorage.setItem("userId", id);
+    setUserIdState(id);
+  };
+
   const removeToken = () => {
     localStorage.removeItem("authToken");
+    localStorage.removeItem("userId");
     setAuthToken("");
-    setUserId("");
+    setUserIdState("");
   };
 
   return (

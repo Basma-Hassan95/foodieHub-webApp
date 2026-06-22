@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import Modal from "../components/Modal";
 
 const API_URL = "https://foodiehub-backend-production.up.railway.app";
 
@@ -7,11 +8,12 @@ const Register = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [modal, setModal] = useState({ type: "", message: "" });
   const navigate = useNavigate();
 
   const handleRegister = async () => {
     if (!username || !email || !password) {
-      alert("Please fill in all fields");
+      setModal({ type: "error", message: "Please fill in all fields." });
       return;
     }
 
@@ -25,15 +27,21 @@ const Register = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Registration successful! Please login.");
-        navigate("/login");
+        setModal({ type: "success", message: "Registration successful! Please login." });
       } else {
-        alert(data.message || "Registration failed");
+        setModal({ type: "error", message: data.message || "Registration failed." });
       }
     } catch (error) {
       console.error("Register error:", error);
-      alert("Something went wrong. Please try again.");
+      setModal({ type: "error", message: "Something went wrong. Please try again." });
     }
+  };
+
+  const handleModalClose = () => {
+    if (modal.type === "success") {
+      navigate("/login");
+    }
+    setModal({ type: "", message: "" });
   };
 
   return (
@@ -81,6 +89,12 @@ const Register = () => {
           </Link>
         </p>
       </div>
+
+      <Modal
+        type={modal.type}
+        message={modal.message}
+        onClose={handleModalClose}
+      />
     </div>
   );
 };

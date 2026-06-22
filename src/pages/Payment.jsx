@@ -2,6 +2,7 @@ import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../CartContext";
 import { UserContext } from "../UserContext";
+import Modal from "../components/Modal";
 
 const API_URL = "https://foodiehub-backend-production.up.railway.app";
 
@@ -17,20 +18,21 @@ const Payment = () => {
   const [expiryYear, setExpiryYear] = useState("");
   const [cvv, setCvv] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [modal, setModal] = useState({ type: "", message: "" });
 
   const generateTokenNumber = () => Math.floor(Math.random() * 900) + 100;
 
   const validateInputs = () => {
     if (!cardType || !nameOnCard || !cardNumber || !expiryMonth || !expiryYear || !cvv) {
-      alert("Please fill in all the payment details.");
+      setModal({ type: "error", message: "Please fill in all the payment details." });
       return false;
     }
     if (cardNumber.length !== 16 || isNaN(cardNumber)) {
-      alert("Card Number must be a valid 16-digit number.");
+      setModal({ type: "error", message: "Card number must be a valid 16-digit number." });
       return false;
     }
     if (cvv.length !== 3 || isNaN(cvv)) {
-      alert("CVV must be a valid 3-digit number.");
+      setModal({ type: "error", message: "CVV must be a valid 3-digit number." });
       return false;
     }
     return true;
@@ -69,13 +71,23 @@ const Payment = () => {
       if (!response.ok) throw new Error("Payment failed");
 
       clearCart();
+      setModal({ type: "success", message: "Payment successful! Your order has been placed 🎉" });
 
+    } catch (error) {
+      console.error("Payment error:", error);
+      setModal({ type: "error", message: "Payment failed. Please try again." });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleModalClose = () => {
+    if (modal.type === "success") {
       navigate("/receipt", {
         state: {
           paymentDetails: {
             cartItems: cart,
             totalPrice,
-            tokenNumber,
             paymentInfo: {
               cardType,
               nameOnCard,
@@ -85,20 +97,14 @@ const Payment = () => {
           },
         },
       });
-    } catch (error) {
-      console.error("Payment error:", error);
-      alert("Payment failed. Please try again.");
-    } finally {
-      setIsLoading(false);
     }
+    setModal({ type: "", message: "" });
   };
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6">
       <div className="max-w-md mx-auto bg-white rounded-lg shadow p-6">
-        <h1 className="text-xl font-bold text-center mb-2">
-          Secure Payment Info
-        </h1>
+        <h1 className="text-xl font-bold text-center mb-2">Secure Payment Info</h1>
         <p className="text-center text-lg mb-6">Total Price: PKR {totalPrice}</p>
 
         <label className="block text-sm font-bold mb-1">Card Type</label>
@@ -174,6 +180,12 @@ const Payment = () => {
           {isLoading ? "Processing..." : "Pay Now"}
         </button>
       </div>
+
+      <Modal
+        type={modal.type}
+        message={modal.message}
+        onClose={handleModalClose}
+      />
     </div>
   );
 };
